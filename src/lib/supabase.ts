@@ -11,7 +11,14 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const url = supabaseUrl || 'https://your-project.supabase.co';
 const anonKey = supabaseAnonKey || 'your-anon-key';
 
-export const supabase = createClient(url, anonKey);
+// Create Supabase client with additional options
+export const supabase = createClient(url, anonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
 
 export type User = {
   id: string;
