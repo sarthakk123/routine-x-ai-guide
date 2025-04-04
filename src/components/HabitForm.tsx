@@ -11,8 +11,28 @@ interface HabitFormProps {
 
 const HabitForm: React.FC<HabitFormProps> = ({ onAddHabit }) => {
   const [habitName, setHabitName] = useState('');
-  const [habitType, setHabitType] = useState<'good' | 'bad'>('good');
   const [isLoading, setIsLoading] = useState(false);
+
+  // List of common words/phrases for bad habits
+  const badHabitKeywords = [
+    'stop', 'quit', 'avoid', 'no more', 'reduce', 'less', 'don\'t', 'dont',
+    'smoking', 'alcohol', 'junk food', 'procrastinate', 'late', 'spending',
+    'social media', 'sugar', 'fast food', 'skipping', 'quit', 'stop', 'limit'
+  ];
+
+  const determineHabitType = (habitText: string): 'good' | 'bad' => {
+    const lowerCaseHabit = habitText.toLowerCase();
+    
+    // Check if any bad habit keywords appear in the habit name
+    for (const keyword of badHabitKeywords) {
+      if (lowerCaseHabit.includes(keyword)) {
+        return 'bad';
+      }
+    }
+    
+    // Default to good habit if no bad habit keywords are found
+    return 'good';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,9 +42,11 @@ const HabitForm: React.FC<HabitFormProps> = ({ onAddHabit }) => {
       return;
     }
 
+    const habitType = determineHabitType(habitName);
     onAddHabit({ name: habitName.trim(), type: habitType });
     setHabitName('');
-    toast.success('Habit added successfully!');
+    
+    toast.success(`${habitType.charAt(0).toUpperCase() + habitType.slice(1)} habit added successfully!`);
   };
 
   const getAiSuggestion = () => {
@@ -56,34 +78,11 @@ const HabitForm: React.FC<HabitFormProps> = ({ onAddHabit }) => {
         <div className="space-y-4">
           <Input
             type="text"
-            placeholder="Enter a Habit"
+            placeholder="Enter a Habit (good habits or 'stop/avoid/no more' for bad habits)"
             value={habitName}
             onChange={(e) => setHabitName(e.target.value)}
             className="bg-routinex-bg border-routinex-card"
           />
-          
-          <div className="flex space-x-2">
-            <Button
-              type="button"
-              className={`flex-1 ${habitType === 'good' 
-                ? 'bg-routinex-good hover:bg-routinex-good/90' 
-                : 'bg-muted text-muted-foreground hover:bg-muted/90'}`}
-              onClick={() => setHabitType('good')}
-              variant="outline"
-            >
-              Good Habit
-            </Button>
-            <Button
-              type="button"
-              className={`flex-1 ${habitType === 'bad' 
-                ? 'bg-routinex-bad hover:bg-routinex-bad/90' 
-                : 'bg-muted text-muted-foreground hover:bg-muted/90'}`}
-              onClick={() => setHabitType('bad')}
-              variant="outline"
-            >
-              Bad Habit
-            </Button>
-          </div>
           
           <Button 
             type="submit" 
