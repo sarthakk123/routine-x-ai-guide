@@ -9,9 +9,11 @@ import {
   User, 
   LogOut 
 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 const Sidebar = () => {
   const location = useLocation();
+  const { signOut, user } = useAuth();
   
   const routes = [
     {
@@ -64,7 +66,14 @@ const Sidebar = () => {
         </ul>
       </nav>
       <div className="border-t border-routinex-card py-4 px-2">
-        <button className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-routinex-card transition-colors">
+        <div className="px-3 py-2">
+          <div className="text-sm font-medium">{user?.user_metadata?.name || user?.email}</div>
+          <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+        </div>
+        <button 
+          onClick={() => signOut()} 
+          className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-routinex-card transition-colors"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </button>
