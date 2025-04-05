@@ -7,7 +7,7 @@ export interface Habit {
   name: string;
   type: 'good' | 'bad';
   streak: number;
-  user_id?: string;
+  user_id: string; // Changed from optional to required
 }
 
 interface HabitListProps {

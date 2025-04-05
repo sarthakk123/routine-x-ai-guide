@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import HabitForm from '@/components/HabitForm';
 import HabitList, { Habit } from '@/components/HabitList';
@@ -55,9 +56,16 @@ const Dashboard = () => {
     try {
       setHabits((prev) => [...prev, habit]);
       
+      // Ensure all required fields are properly typed for Supabase
       const { error } = await supabase
         .from('habits')
-        .insert(habit);
+        .insert({
+          id: habit.id,
+          name: habit.name,
+          type: habit.type,
+          streak: habit.streak,
+          user_id: habit.user_id
+        });
         
       if (error) {
         throw error;
