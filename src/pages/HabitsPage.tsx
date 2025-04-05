@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import HabitList, { Habit } from '@/components/HabitList';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 const HabitsPage = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -14,7 +13,6 @@ const HabitsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
-  // Load habits from Supabase on component mount
   useEffect(() => {
     const fetchHabits = async () => {
       if (!user) return;
@@ -46,10 +44,8 @@ const HabitsPage = () => {
 
   const handleDeleteHabit = async (id: string) => {
     try {
-      // Optimistically update UI
       setHabits((prev) => prev.filter((habit) => habit.id !== id));
       
-      // Delete from Supabase
       const { error } = await supabase
         .from('habits')
         .delete()
@@ -63,7 +59,6 @@ const HabitsPage = () => {
     } catch (error: any) {
       console.error('Error deleting habit:', error.message);
       toast.error('Failed to delete habit');
-      // Reload habits to revert
       if (user) {
         const { data } = await supabase
           .from('habits')
@@ -79,13 +74,11 @@ const HabitsPage = () => {
 
   const handleToggleCompletion = async (id: string) => {
     try {
-      // Find the habit to update
       const habitToUpdate = habits.find(h => h.id === id);
       if (!habitToUpdate) return;
       
       const newStreak = habitToUpdate.streak + 1;
       
-      // Optimistically update UI
       setHabits((prev) =>
         prev.map((habit) =>
           habit.id === id
@@ -94,7 +87,6 @@ const HabitsPage = () => {
         )
       );
       
-      // Update in Supabase
       const { error } = await supabase
         .from('habits')
         .update({ streak: newStreak })
@@ -108,7 +100,6 @@ const HabitsPage = () => {
     } catch (error: any) {
       console.error('Error updating streak:', error.message);
       toast.error('Failed to update streak');
-      // Reload habits to revert
       if (user) {
         const { data } = await supabase
           .from('habits')
