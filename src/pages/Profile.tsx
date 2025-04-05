@@ -10,6 +10,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Define the Profile interface based on your database schema
+interface ProfileData {
+  id: string;
+  name: string | null;
+  username: string | null;
+  daily_reminders: boolean;
+  weekly_reports: boolean;
+  achievement_alerts: boolean;
+  public_profile: boolean;
+  data_analytics: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 const Profile = () => {
   const { user } = useAuth();
   
