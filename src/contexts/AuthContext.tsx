@@ -21,15 +21,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Listen for auth changes first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    // Then check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -80,12 +80,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      // For debugging purposes
+      console.log("Starting logout process...");
+      
+      const { error } = await supabase.auth.signOut({
+        scope: 'local' // Change from 'global' to 'local' to fix session error
+      });
       
       if (error) {
+        console.error("Logout error:", error);
         toast.error('Logout failed: ' + error.message);
         throw error;
       }
+      
+      // Clear session state manually to ensure consistent UI
+      setSession(null);
+      setUser(null);
       
       toast.success('Logged out successfully');
     } catch (error: any) {
