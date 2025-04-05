@@ -1,19 +1,17 @@
 
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Home, Calendar, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const Sidebar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { signOut } = useAuth();
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
       toast.error('Failed to log out');
