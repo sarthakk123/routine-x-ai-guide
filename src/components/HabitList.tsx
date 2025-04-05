@@ -7,6 +7,7 @@ export interface Habit {
   name: string;
   type: 'good' | 'bad';
   streak: number;
+  user_id?: string;
 }
 
 interface HabitListProps {

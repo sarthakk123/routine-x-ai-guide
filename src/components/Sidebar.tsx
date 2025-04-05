@@ -1,72 +1,85 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { 
-  Home, 
-  BarChart2, 
-  Repeat, 
-  User, 
-  LogOut 
-} from 'lucide-react';
+import { Home, Calendar, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const Sidebar = () => {
   const location = useLocation();
-  
-  const routes = [
-    {
-      label: 'Home',
-      icon: <Home className="mr-2 h-4 w-4" />,
-      href: '/',
-      active: location.pathname === '/',
-    },
-    {
-      label: 'Dashboard',
-      icon: <BarChart2 className="mr-2 h-4 w-4" />,
-      href: '/dashboard',
-      active: location.pathname === '/dashboard',
-    },
-    {
-      label: 'My Habits',
-      icon: <Repeat className="mr-2 h-4 w-4" />,
-      href: '/habits',
-      active: location.pathname === '/habits',
-    },
-    {
-      label: 'Profile',
-      icon: <User className="mr-2 h-4 w-4" />,
-      href: '/profile',
-      active: location.pathname === '/profile',
-    },
-  ];
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out');
+    }
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   return (
-    <div className="flex h-full w-64 flex-col bg-routinex-bg border-r border-routinex-card">
-      <div className="py-4 px-3">
-        <h1 className="text-xl font-bold">RoutineX</h1>
+    <div className="w-16 md:w-64 bg-sidebar-background border-r border-sidebar-border h-screen flex flex-col">
+      <div className="p-4 flex items-center justify-center md:justify-start">
+        <h1 className="text-xl font-bold text-sidebar-primary hidden md:block">RoutineX</h1>
+        <span className="text-xl font-bold text-sidebar-primary md:hidden">RX</span>
       </div>
-      <nav className="flex-1 py-4">
+      
+      <nav className="flex-grow mt-8">
         <ul className="space-y-1 px-2">
-          {routes.map((route) => (
-            <li key={route.href}>
-              <Link
-                to={route.href}
-                className={cn(
-                  "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-routinex-card",
-                  route.active ? "bg-routinex-card text-foreground" : "text-muted-foreground"
-                )}
-              >
-                {route.icon}
-                {route.label}
-              </Link>
-            </li>
-          ))}
+          <li>
+            <Link
+              to="/dashboard"
+              className={`flex items-center p-2 rounded-md transition-colors ${
+                isActive('/dashboard')
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent'
+              }`}
+            >
+              <Home size={20} className="min-w-5" />
+              <span className="ml-3 hidden md:inline">Dashboard</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/habits"
+              className={`flex items-center p-2 rounded-md transition-colors ${
+                isActive('/habits')
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent'
+              }`}
+            >
+              <Calendar size={20} className="min-w-5" />
+              <span className="ml-3 hidden md:inline">Habits</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/profile"
+              className={`flex items-center p-2 rounded-md transition-colors ${
+                isActive('/profile')
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent'
+              }`}
+            >
+              <User size={20} className="min-w-5" />
+              <span className="ml-3 hidden md:inline">Profile</span>
+            </Link>
+          </li>
         </ul>
       </nav>
-      <div className="border-t border-routinex-card py-4 px-2">
-        <button className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-routinex-card transition-colors">
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
+      
+      <div className="p-4">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center w-full p-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+        >
+          <LogOut size={20} className="min-w-5" />
+          <span className="ml-3 hidden md:inline">Logout</span>
         </button>
       </div>
     </div>

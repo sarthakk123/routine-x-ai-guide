@@ -5,42 +5,121 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const HabitsPage = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [filter, setFilter] = useState<'all' | 'good' | 'bad'>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Load habits from localStorage on component mount
+  // Load habits from Supabase on component mount
   useEffect(() => {
-    const savedHabits = localStorage.getItem('routinex-habits');
-    if (savedHabits) {
+    const fetchHabits = async () => {
+      if (!user) return;
+      
       try {
-        setHabits(JSON.parse(savedHabits));
-      } catch (error) {
-        console.error('Failed to parse saved habits', error);
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('habits')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setHabits(data as Habit[]);
+        }
+      } catch (error: any) {
+        console.error('Error fetching habits:', error.message);
+        toast.error('Failed to load habits');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchHabits();
+  }, [user]);
+
+  const handleDeleteHabit = async (id: string) => {
+    try {
+      // Optimistically update UI
+      setHabits((prev) => prev.filter((habit) => habit.id !== id));
+      
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('habits')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Habit deleted successfully");
+    } catch (error: any) {
+      console.error('Error deleting habit:', error.message);
+      toast.error('Failed to delete habit');
+      // Reload habits to revert
+      if (user) {
+        const { data } = await supabase
+          .from('habits')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (data) {
+          setHabits(data as Habit[]);
+        }
       }
     }
-  }, []);
-
-  // Save habits to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('routinex-habits', JSON.stringify(habits));
-  }, [habits]);
-
-  const handleDeleteHabit = (id: string) => {
-    setHabits((prev) => prev.filter((habit) => habit.id !== id));
-    toast.success("Habit deleted successfully");
   };
 
-  const handleToggleCompletion = (id: string) => {
-    setHabits((prev) =>
-      prev.map((habit) =>
-        habit.id === id
-          ? { ...habit, streak: habit.streak + 1 }
-          : habit
-      )
-    );
-    toast.success("Streak updated!");
+  const handleToggleCompletion = async (id: string) => {
+    try {
+      // Find the habit to update
+      const habitToUpdate = habits.find(h => h.id === id);
+      if (!habitToUpdate) return;
+      
+      const newStreak = habitToUpdate.streak + 1;
+      
+      // Optimistically update UI
+      setHabits((prev) =>
+        prev.map((habit) =>
+          habit.id === id
+            ? { ...habit, streak: newStreak }
+            : habit
+        )
+      );
+      
+      // Update in Supabase
+      const { error } = await supabase
+        .from('habits')
+        .update({ streak: newStreak })
+        .eq('id', id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Streak updated!");
+    } catch (error: any) {
+      console.error('Error updating streak:', error.message);
+      toast.error('Failed to update streak');
+      // Reload habits to revert
+      if (user) {
+        const { data } = await supabase
+          .from('habits')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (data) {
+          setHabits(data as Habit[]);
+        }
+      }
+    }
   };
 
   const filteredHabits = habits.filter(habit => {
@@ -60,37 +139,43 @@ const HabitsPage = () => {
         </Link>
       </div>
       
-      <div className="bg-routinex-card p-6 rounded-lg shadow mb-6">
-        <div className="flex space-x-2 mb-6">
-          <Button
-            variant="outline"
-            className={`${filter === 'all' ? 'bg-routinex-action text-white' : 'bg-routinex-bg'}`}
-            onClick={() => setFilter('all')}
-          >
-            All Habits
-          </Button>
-          <Button
-            variant="outline"
-            className={`${filter === 'good' ? 'bg-routinex-good text-white' : 'bg-routinex-bg'}`}
-            onClick={() => setFilter('good')}
-          >
-            Good Habits
-          </Button>
-          <Button
-            variant="outline"
-            className={`${filter === 'bad' ? 'bg-routinex-bad text-white' : 'bg-routinex-bg'}`}
-            onClick={() => setFilter('bad')}
-          >
-            Bad Habits
-          </Button>
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-routinex-action"></div>
         </div>
-        
-        <HabitList 
-          habits={filteredHabits} 
-          onDelete={handleDeleteHabit} 
-          onToggleCompletion={handleToggleCompletion} 
-        />
-      </div>
+      ) : (
+        <div className="bg-routinex-card p-6 rounded-lg shadow mb-6">
+          <div className="flex space-x-2 mb-6">
+            <Button
+              variant="outline"
+              className={`${filter === 'all' ? 'bg-routinex-action text-white' : 'bg-routinex-bg'}`}
+              onClick={() => setFilter('all')}
+            >
+              All Habits
+            </Button>
+            <Button
+              variant="outline"
+              className={`${filter === 'good' ? 'bg-routinex-good text-white' : 'bg-routinex-bg'}`}
+              onClick={() => setFilter('good')}
+            >
+              Good Habits
+            </Button>
+            <Button
+              variant="outline"
+              className={`${filter === 'bad' ? 'bg-routinex-bad text-white' : 'bg-routinex-bg'}`}
+              onClick={() => setFilter('bad')}
+            >
+              Bad Habits
+            </Button>
+          </div>
+          
+          <HabitList 
+            habits={filteredHabits} 
+            onDelete={handleDeleteHabit} 
+            onToggleCompletion={handleToggleCompletion} 
+          />
+        </div>
+      )}
     </div>
   );
 };
