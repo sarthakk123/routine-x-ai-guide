@@ -11,21 +11,24 @@ export type Database = {
     Tables: {
       habits: {
         Row: {
-          id: number
+          created_at: string | null
+          id: string
           name: string
           streak: number | null
           type: string
           user_id: string
         }
         Insert: {
-          id?: number
+          created_at?: string | null
+          id: string
           name: string
           streak?: number | null
           type: string
           user_id: string
         }
         Update: {
-          id?: number
+          created_at?: string | null
+          id?: string
           name?: string
           streak?: number | null
           type?: string
