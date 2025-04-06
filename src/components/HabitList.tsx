@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Check, X, Flame } from 'lucide-react';
+import { toast } from 'sonner';
 
 export interface Habit {
   id: string;
@@ -18,6 +19,23 @@ interface HabitListProps {
 }
 
 const HabitList: React.FC<HabitListProps> = ({ habits, onDelete, onToggleCompletion }) => {
+  const checkIfUpdatedToday = (habit: Habit) => {
+    // Get today's date in ISO format YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Check if habit was already updated today
+    return habit.last_updated === today;
+  };
+  
+  const handleToggleCompletion = (habit: Habit) => {
+    if (checkIfUpdatedToday(habit)) {
+      toast.info("You've already updated this habit's streak today!");
+      return;
+    }
+    
+    onToggleCompletion(habit.id);
+  };
+
   if (habits.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -39,12 +57,13 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onDelete, onToggleComplet
         >
           <div className="flex items-center">
             <button
-              onClick={() => onToggleCompletion(habit.id)}
+              onClick={() => handleToggleCompletion(habit)}
               className={`mr-3 h-6 w-6 rounded-full flex items-center justify-center ${
                 habit.type === 'good' 
                   ? 'bg-routinex-good/20 hover:bg-routinex-good/30' 
                   : 'bg-routinex-bad/20 hover:bg-routinex-bad/30'
-              }`}
+              } ${checkIfUpdatedToday(habit) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={checkIfUpdatedToday(habit)}
             >
               <Check size={14} className={habit.type === 'good' ? 'text-routinex-good' : 'text-routinex-bad'} />
             </button>
@@ -55,6 +74,11 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onDelete, onToggleComplet
             <div className="flex items-center mr-4">
               <Flame size={14} className="mr-1 text-orange-400" />
               <span className="text-sm">{habit.streak} days</span>
+              {habit.last_updated && (
+                <span className="text-xs text-muted-foreground ml-2">
+                  {checkIfUpdatedToday(habit) ? '(Updated today)' : ''}
+                </span>
+              )}
             </div>
             <button
               onClick={() => onDelete(habit.id)}
