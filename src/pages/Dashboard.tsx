@@ -124,6 +124,7 @@ const Dashboard = () => {
       
       const newStreak = habitToUpdate.streak + 1;
       
+      // Optimistically update the UI first
       setHabits((prev) =>
         prev.map((habit) =>
           habit.id === id
@@ -132,6 +133,9 @@ const Dashboard = () => {
         )
       );
       
+      console.log('Updating streak for habit:', id, 'New streak:', newStreak, 'Today:', today);
+      
+      // Update the database with the new streak and last_updated values
       const { error } = await supabase
         .from('habits')
         .update({ 
@@ -141,6 +145,7 @@ const Dashboard = () => {
         .eq('id', id);
         
       if (error) {
+        console.error('Supabase update error:', error);
         throw error;
       }
       
@@ -148,6 +153,8 @@ const Dashboard = () => {
     } catch (error: any) {
       console.error('Error updating streak:', error.message);
       toast.error('Failed to update streak');
+      
+      // Refresh habits from database on error to ensure UI is consistent
       if (user) {
         const { data } = await supabase
           .from('habits')
