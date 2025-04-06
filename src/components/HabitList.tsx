@@ -27,7 +27,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onDelete, onToggleComplet
     return habit.last_updated === today;
   };
   
-  const handleToggleCompletion = (habit: Habit) => {
+  const handleToggleClick = (habit: Habit) => {
     if (checkIfUpdatedToday(habit)) {
       toast.info("You've already updated this habit's streak today!");
       return;
@@ -35,9 +35,6 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onDelete, onToggleComplet
     
     // Call parent component's handler with the habit id
     onToggleCompletion(habit.id);
-    
-    // Give immediate feedback to the user
-    toast.success("Updating streak...");
   };
 
   if (habits.length === 0) {
@@ -61,7 +58,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onDelete, onToggleComplet
         >
           <div className="flex items-center">
             <button
-              onClick={() => handleToggleCompletion(habit)}
+              onClick={() => handleToggleClick(habit)}
               className={`mr-3 h-6 w-6 rounded-full flex items-center justify-center ${
                 habit.type === 'good' 
                   ? 'bg-routinex-good/20 hover:bg-routinex-good/30' 

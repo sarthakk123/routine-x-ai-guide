@@ -122,9 +122,33 @@ const Dashboard = () => {
         return;
       }
       
+      // Calculate new streak
       const newStreak = habitToUpdate.streak + 1;
       
-      // Optimistically update the UI first
+      console.log('Starting streak update for habit:', id);
+      console.log('Current streak:', habitToUpdate.streak);
+      console.log('New streak will be:', newStreak);
+      console.log('Today\'s date is:', today);
+      
+      // First update database to ensure data consistency
+      const { error, data } = await supabase
+        .from('habits')
+        .update({ 
+          streak: newStreak,
+          last_updated: today
+        })
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+      
+      console.log('Database updated successfully:', data);
+      
+      // Then update local state with the returned data
       setHabits((prev) =>
         prev.map((habit) =>
           habit.id === id
@@ -133,29 +157,14 @@ const Dashboard = () => {
         )
       );
       
-      console.log('Updating streak for habit:', id, 'New streak:', newStreak, 'Today:', today);
-      
-      // Update the database with the new streak and last_updated values
-      const { error } = await supabase
-        .from('habits')
-        .update({ 
-          streak: newStreak,
-          last_updated: today
-        })
-        .eq('id', id);
-        
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
-      }
-      
       toast.success("Streak updated!");
     } catch (error: any) {
       console.error('Error updating streak:', error.message);
       toast.error('Failed to update streak');
       
-      // Refresh habits from database on error to ensure UI is consistent
+      // Refresh habits from database on error
       if (user) {
+        console.log('Refreshing habit data after error');
         const { data } = await supabase
           .from('habits')
           .select('*')
