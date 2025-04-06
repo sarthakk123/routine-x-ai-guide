@@ -9,72 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      habits: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          streak: number | null
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id: string
-          name: string
-          streak?: number | null
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          streak?: number | null
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          achievement_alerts: boolean | null
-          created_at: string | null
-          daily_reminders: boolean | null
-          data_analytics: boolean | null
-          id: string
-          name: string | null
-          public_profile: boolean | null
-          updated_at: string | null
-          username: string | null
-          weekly_reports: boolean | null
-        }
-        Insert: {
-          achievement_alerts?: boolean | null
-          created_at?: string | null
-          daily_reminders?: boolean | null
-          data_analytics?: boolean | null
-          id: string
-          name?: string | null
-          public_profile?: boolean | null
-          updated_at?: string | null
-          username?: string | null
-          weekly_reports?: boolean | null
-        }
-        Update: {
-          achievement_alerts?: boolean | null
-          created_at?: string | null
-          daily_reminders?: boolean | null
-          data_analytics?: boolean | null
-          id?: string
-          name?: string | null
-          public_profile?: boolean | null
-          updated_at?: string | null
-          username?: string | null
-          weekly_reports?: boolean | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
