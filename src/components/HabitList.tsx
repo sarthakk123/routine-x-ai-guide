@@ -33,7 +33,11 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onDelete, onToggleComplet
       return;
     }
     
+    // Call parent component's handler with the habit id
     onToggleCompletion(habit.id);
+    
+    // Give immediate feedback to the user
+    toast.success("Updating streak...");
   };
 
   if (habits.length === 0) {

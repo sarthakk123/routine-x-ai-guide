@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import HabitList, { Habit } from '@/components/HabitList';
 import { Button } from '@/components/ui/button';
@@ -77,15 +78,19 @@ const HabitsPage = () => {
       const habitToUpdate = habits.find(h => h.id === id);
       if (!habitToUpdate) return;
       
+      // Get today's date in ISO format YYYY-MM-DD
       const today = new Date().toISOString().split('T')[0];
       
+      // Check if habit was already updated today
       if (habitToUpdate.last_updated === today) {
         toast.info("You've already updated this habit's streak today!");
         return;
       }
       
+      // Calculate new streak value
       const newStreak = habitToUpdate.streak + 1;
       
+      // Optimistically update the UI
       setHabits((prev) =>
         prev.map((habit) =>
           habit.id === id
@@ -94,6 +99,9 @@ const HabitsPage = () => {
         )
       );
       
+      console.log('Updating streak for habit:', id, 'New streak:', newStreak, 'Today:', today);
+      
+      // Update the database
       const { error } = await supabase
         .from('habits')
         .update({ 
@@ -103,6 +111,7 @@ const HabitsPage = () => {
         .eq('id', id);
         
       if (error) {
+        console.error('Supabase update error:', error);
         throw error;
       }
       
@@ -110,6 +119,8 @@ const HabitsPage = () => {
     } catch (error: any) {
       console.error('Error updating streak:', error.message);
       toast.error('Failed to update streak');
+      
+      // Refresh habits from database on error to ensure UI is consistent
       if (user) {
         const { data } = await supabase
           .from('habits')
