@@ -7,7 +7,8 @@ export interface Habit {
   name: string;
   type: 'good' | 'bad';
   streak: number;
-  user_id: string; // Changed from optional to required
+  user_id: string;
+  last_updated?: string; // Added to track when streak was last updated
 }
 
 interface HabitListProps {

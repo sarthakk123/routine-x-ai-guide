@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import HabitForm from '@/components/HabitForm';
 import HabitList, { Habit } from '@/components/HabitList';
+import HabitForm from '@/components/HabitForm';
 import DonutChart from '@/components/DonutChart';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
@@ -56,7 +56,6 @@ const Dashboard = () => {
     try {
       setHabits((prev) => [...prev, habit]);
       
-      // Ensure all required fields are properly typed for Supabase
       const { error } = await supabase
         .from('habits')
         .insert({
@@ -114,19 +113,31 @@ const Dashboard = () => {
       const habitToUpdate = habits.find(h => h.id === id);
       if (!habitToUpdate) return;
       
+      // Get today's date in ISO format YYYY-MM-DD
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check if habit was already updated today
+      if (habitToUpdate.last_updated === today) {
+        toast.info("You've already updated this habit's streak today!");
+        return;
+      }
+      
       const newStreak = habitToUpdate.streak + 1;
       
       setHabits((prev) =>
         prev.map((habit) =>
           habit.id === id
-            ? { ...habit, streak: newStreak }
+            ? { ...habit, streak: newStreak, last_updated: today }
             : habit
         )
       );
       
       const { error } = await supabase
         .from('habits')
-        .update({ streak: newStreak })
+        .update({ 
+          streak: newStreak,
+          last_updated: today
+        })
         .eq('id', id);
         
       if (error) {

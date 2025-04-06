@@ -77,19 +77,29 @@ const HabitsPage = () => {
       const habitToUpdate = habits.find(h => h.id === id);
       if (!habitToUpdate) return;
       
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (habitToUpdate.last_updated === today) {
+        toast.info("You've already updated this habit's streak today!");
+        return;
+      }
+      
       const newStreak = habitToUpdate.streak + 1;
       
       setHabits((prev) =>
         prev.map((habit) =>
           habit.id === id
-            ? { ...habit, streak: newStreak }
+            ? { ...habit, streak: newStreak, last_updated: today }
             : habit
         )
       );
       
       const { error } = await supabase
         .from('habits')
-        .update({ streak: newStreak })
+        .update({ 
+          streak: newStreak,
+          last_updated: today
+        })
         .eq('id', id);
         
       if (error) {
