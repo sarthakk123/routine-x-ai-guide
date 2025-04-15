@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import HabitList, { Habit } from '@/components/HabitList';
 import { Button } from '@/components/ui/button';
@@ -76,60 +75,44 @@ const HabitsPage = () => {
   const handleToggleCompletion = async (id: string) => {
     try {
       const habitToUpdate = habits.find(h => h.id === id);
-      if (!habitToUpdate) return;
-      
-      // Get today's date in ISO format YYYY-MM-DD
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Check if habit was already updated today
-      if (habitToUpdate.last_updated === today) {
-        toast.info("You've already updated this habit's streak today!");
+      if (!habitToUpdate) {
+        console.error('Habit not found:', id);
         return;
       }
       
-      // Calculate new streak
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (habitToUpdate.last_updated === today) {
+        toast.info("You've already updated this habit today!");
+        return;
+      }
+
       const newStreak = habitToUpdate.streak + 1;
-      
-      console.log('Starting streak update for habit:', id);
-      console.log('Current streak:', habitToUpdate.streak);
-      console.log('New streak will be:', newStreak);
-      console.log('Today\'s date is:', today);
-      
-      // First update database to ensure data consistency
-      const { error, data } = await supabase
+      setHabits(prev =>
+        prev.map(h =>
+          h.id === id ? { ...h, streak: newStreak, last_updated: today } : h
+        )
+      );
+
+      const { error } = await supabase
         .from('habits')
         .update({ 
           streak: newStreak,
           last_updated: today
         })
-        .eq('id', id)
-        .select()
-        .single();
-        
+        .eq('id', id);
+
       if (error) {
-        console.error('Supabase update error:', error);
         throw error;
       }
+
+      toast.success("Streak updated successfully!");
       
-      console.log('Database updated successfully:', data);
-      
-      // Then update local state with the returned data
-      setHabits((prev) =>
-        prev.map((habit) =>
-          habit.id === id
-            ? { ...habit, streak: newStreak, last_updated: today }
-            : habit
-        )
-      );
-      
-      toast.success("Streak updated!");
     } catch (error: any) {
-      console.error('Error updating streak:', error.message);
+      console.error('Error updating streak:', error);
       toast.error('Failed to update streak');
       
-      // Refresh habits from database on error
       if (user) {
-        console.log('Refreshing habit data after error');
         const { data } = await supabase
           .from('habits')
           .select('*')
