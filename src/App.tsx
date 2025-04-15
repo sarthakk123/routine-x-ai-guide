@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import RoutineBuilder from './pages/routine-builder';
 
 const queryClient = new QueryClient();
 
@@ -33,6 +33,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/habits" element={<HabitsPage />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/routine-builder" element={<RoutineBuilder />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
