@@ -281,7 +281,7 @@ export default function RoutineBuilder() {
           id: r.id,
           routineName: r.name,
           description: r.description || '',
-          schedule: r.schedule,
+          schedule: typeof r.schedule === 'string' ? JSON.parse(r.schedule) : r.schedule,
           tips: r.tips,
           difficulty: r.difficulty as 'beginner' | 'intermediate' | 'advanced',
           estimatedCalories: r.estimated_calories || undefined,
@@ -334,11 +334,12 @@ export default function RoutineBuilder() {
       if (data) {
         setRoutineSaved(true);
         
+        // When retrieving data back from Supabase, ensure proper type conversion
         const savedRoutine: Routine = {
           id: data.id,
           routineName: data.name,
           description: data.description || '',
-          schedule: data.schedule,
+          schedule: typeof data.schedule === 'string' ? JSON.parse(data.schedule) : data.schedule,
           tips: data.tips,
           difficulty: data.difficulty as 'beginner' | 'intermediate' | 'advanced',
           estimatedCalories: data.estimated_calories || undefined,
