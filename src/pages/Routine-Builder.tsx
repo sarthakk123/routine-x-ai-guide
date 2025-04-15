@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -209,6 +210,13 @@ export default function RoutineBuilder() {
   const [activeTab, setActiveTab] = useState('builder');
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Load saved routines when component mounts if user is logged in
+  useEffect(() => {
+    if (user) {
+      loadSavedRoutines();
+    }
+  }, [user]);
 
   const handleOptionSelect = (option: string) => {
     const currentQuestion = routineQuestions[currentStep];
