@@ -33,7 +33,7 @@ export type SupabaseRoutine = {
   user_id: string;
   name: string;
   description: string | null;
-  schedule: DaySchedule[];
+  schedule: DaySchedule[];  // Explicitly defining as DaySchedule[] to match our app's type
   tips: string[];
   difficulty: string | null;
   estimated_calories: number | null;

@@ -23,7 +23,6 @@ type Question = {
   allowMultiple?: boolean;
 };
 
-// Enhanced questions for better routine generation
 const routineQuestions: Question[] = [
   {
     id: 'goal',
@@ -72,7 +71,6 @@ const routineQuestions: Question[] = [
   }
 ];
 
-// This is the RoutineDisplay component that was missing
 function RoutineDisplay({ 
   routine,
   onSave,
@@ -320,13 +318,18 @@ export default function RoutineBuilder() {
         tags: routine.tags
       };
 
+      console.log('Saving routine data:', routineData);
+
       const { data, error } = await supabase
         .from('routines')
         .insert([routineData])
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
       
       if (data) {
         setRoutineSaved(true);
@@ -351,11 +354,11 @@ export default function RoutineBuilder() {
           description: 'You can find it in your saved routines.',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving routine:', error);
       toast({
         title: 'Failed to save routine',
-        description: 'Please try again later.',
+        description: error.message || 'Please try again later.',
         variant: 'destructive'
       });
     } finally {
@@ -387,8 +390,6 @@ export default function RoutineBuilder() {
     }
   };
 
-  // This function simulates an AI-powered routine generation
-  // In a real application, you would replace this with an actual API call to an AI service
   const aiGenerateRoutine = async (answers: Record<string, any>): Promise<Routine> => {
     return new Promise(resolve => {
       setTimeout(() => {
