@@ -1,4 +1,3 @@
-// pages/RoutineBuilder.tsx
 'use client';
 
 import { useState } from 'react';
@@ -10,11 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, RefreshCw, Save, Share, Clipboard, CheckCircle, Calendar } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import type { Activity, DaySchedule, Routine, SupabaseRoutine } from '@/types/routine';
 
 type Question = {
   id: string;
@@ -22,35 +21,6 @@ type Question = {
   type: 'multiple-choice' | 'text' | 'scale';
   options?: string[];
   allowMultiple?: boolean;
-};
-
-type Activity = {
-  name: string;
-  duration: string;
-  details: string;
-  equipmentNeeded?: string[];
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  targetMuscles?: string[];
-  caloriesBurn?: number;
-};
-
-type DaySchedule = {
-  day: string;
-  activities: Activity[];
-  focus?: string;
-};
-
-type Routine = {
-  id?: string;
-  routineName: string;
-  description: string;
-  schedule: DaySchedule[];
-  tips: string[];
-  estimatedCalories?: number;
-  totalTime?: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
-  tags?: string[];
-  createdAt?: string;
 };
 
 // Enhanced questions for better routine generation
@@ -308,7 +278,20 @@ export default function RoutineBuilder() {
       if (error) throw error;
       
       if (data) {
-        setSavedRoutines(data);
+        // Convert from Supabase format to our internal format
+        const convertedRoutines: Routine[] = data.map((r: SupabaseRoutine) => ({
+          id: r.id,
+          routineName: r.name,
+          description: r.description || '',
+          schedule: r.schedule,
+          tips: r.tips,
+          difficulty: r.difficulty as 'beginner' | 'intermediate' | 'advanced',
+          estimatedCalories: r.estimated_calories || undefined,
+          totalTime: r.total_time || undefined,
+          tags: r.tags || undefined,
+          createdAt: r.created_at
+        }));
+        setSavedRoutines(convertedRoutines);
       }
     } catch (error) {
       console.error('Error loading routines:', error);
@@ -324,36 +307,41 @@ export default function RoutineBuilder() {
     
     try {
       setIsGenerating(true);
-      const timestamp = new Date().toISOString();
       
+      const routineData = {
+        user_id: user.id,
+        name: routine.routineName,
+        description: routine.description,
+        schedule: routine.schedule,
+        tips: routine.tips,
+        difficulty: routine.difficulty,
+        estimated_calories: routine.estimatedCalories,
+        total_time: routine.totalTime,
+        tags: routine.tags
+      };
+
       const { data, error } = await supabase
         .from('routines')
-        .insert([
-          {
-            user_id: user.id,
-            name: routine.routineName,
-            description: routine.description,
-            schedule: routine.schedule,
-            tips: routine.tips,
-            difficulty: routine.difficulty,
-            estimated_calories: routine.estimatedCalories,
-            total_time: routine.totalTime,
-            tags: routine.tags,
-            created_at: timestamp
-          }
-        ])
-        .select();
+        .insert([routineData])
+        .select()
+        .single();
         
       if (error) throw error;
       
       if (data) {
         setRoutineSaved(true);
         
-        // Add the new routine to the saved routines list
-        const savedRoutine = {
-          ...routine,
-          id: data[0].id,
-          createdAt: timestamp
+        const savedRoutine: Routine = {
+          id: data.id,
+          routineName: data.name,
+          description: data.description || '',
+          schedule: data.schedule,
+          tips: data.tips,
+          difficulty: data.difficulty as 'beginner' | 'intermediate' | 'advanced',
+          estimatedCalories: data.estimated_calories || undefined,
+          totalTime: data.total_time || undefined,
+          tags: data.tags || undefined,
+          createdAt: data.created_at
         };
         
         setSavedRoutines([...savedRoutines, savedRoutine]);

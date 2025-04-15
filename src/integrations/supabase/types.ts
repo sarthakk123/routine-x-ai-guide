@@ -75,6 +75,51 @@ export type Database = {
         }
         Relationships: []
       }
+      routines: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          estimated_calories: number | null
+          id: string
+          name: string
+          schedule: Json
+          tags: string[] | null
+          tips: string[]
+          total_time: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_calories?: number | null
+          id?: string
+          name: string
+          schedule: Json
+          tags?: string[] | null
+          tips?: string[]
+          total_time?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_calories?: number | null
+          id?: string
+          name?: string
+          schedule?: Json
+          tags?: string[] | null
+          tips?: string[]
+          total_time?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
