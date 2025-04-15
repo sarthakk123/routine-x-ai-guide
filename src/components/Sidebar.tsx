@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, User, LogOut } from 'lucide-react';
+import { Home, Calendar, User, LogOut, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -55,6 +54,19 @@ const Sidebar = () => {
             >
               <Calendar size={20} className="min-w-5" />
               <span className="ml-3 hidden md:inline">Habits</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/routine-builder"
+              className={`flex items-center p-2 rounded-md transition-colors ${
+                isActive('/routine-builder')
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent'
+              }`}
+            >
+              <Plus size={20} className="min-w-5" />
+              <span className="ml-3 hidden md:inline">Create Routine</span>
             </Link>
           </li>
           <li>
