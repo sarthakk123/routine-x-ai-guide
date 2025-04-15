@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, RefreshCw, Save, Share, Clipboard, CheckCircle, Calendar } from 'lucide-react';
+import { Loader2, RefreshCw, Save, Share, Clipboard, CheckCircle, Calendar, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -77,12 +76,14 @@ function RoutineDisplay({
   onSave,
   onReset,
   onCopy,
+  onDelete,
   isSaved
 }: { 
   routine: Routine;
   onSave: () => void;
   onReset: () => void;
   onCopy: () => void;
+  onDelete: () => void;
   isSaved: boolean;
 }) {
   return (
@@ -101,10 +102,17 @@ function RoutineDisplay({
             <RefreshCw className="h-4 w-4 mr-2" />
             New
           </Button>
-          <Button size="sm" onClick={onSave} disabled={isSaved}>
-            <Save className="h-4 w-4 mr-2" />
-            {isSaved ? 'Saved' : 'Save'}
-          </Button>
+          {isSaved ? (
+            <Button variant="destructive" size="sm" onClick={onDelete}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          ) : (
+            <Button size="sm" onClick={onSave}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaved ? 'Saved' : 'Save'}
+            </Button>
+          )}
         </div>
       </div>
       
@@ -211,7 +219,6 @@ export default function RoutineBuilder() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Load saved routines when component mounts if user is logged in
   useEffect(() => {
     if (user) {
       loadSavedRoutines();
@@ -258,7 +265,6 @@ export default function RoutineBuilder() {
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-      // Restore previous answers
       const prevQuestion = routineQuestions[currentStep - 1];
       const prevAnswer = answers[prevQuestion.id];
       
@@ -284,7 +290,6 @@ export default function RoutineBuilder() {
       if (error) throw error;
       
       if (data) {
-        // Convert from Supabase format to our internal format
         const convertedRoutines: Routine[] = data.map((r: SupabaseRoutine) => ({
           id: r.id,
           routineName: r.name,
@@ -342,7 +347,6 @@ export default function RoutineBuilder() {
       if (data) {
         setRoutineSaved(true);
         
-        // When retrieving data back from Supabase, ensure proper type conversion
         const savedRoutine: Routine = {
           id: data.id,
           routineName: data.name,
@@ -379,7 +383,6 @@ export default function RoutineBuilder() {
     setIsGenerating(true);
     setRoutineSaved(false);
     try {
-      // In a real application, you would call your AI service here
       const generatedRoutine = await aiGenerateRoutine(answers);
       setRoutine(generatedRoutine);
       
@@ -404,12 +407,11 @@ export default function RoutineBuilder() {
       setTimeout(() => {
         const generatedRoutine = createEnhancedRoutine(answers);
         resolve(generatedRoutine);
-      }, 2000); // Simulate API delay
+      }, 2000);
     });
   };
 
   const createEnhancedRoutine = (answers: Record<string, any>): Routine => {
-    // Extract answers
     const goal = Array.isArray(answers.goal) ? answers.goal[0] : answers.goal;
     const level = Array.isArray(answers.level) ? answers.level[0] : answers.level;
     const time = Array.isArray(answers.time) ? answers.time[0] : answers.time;
@@ -418,17 +420,14 @@ export default function RoutineBuilder() {
     const equipment = Array.isArray(answers.equipment) ? answers.equipment : [answers.equipment];
     const limitations = Array.isArray(answers.limitations) ? answers.limitations : [answers.limitations];
     
-    // Determine difficulty based on user input
     const difficulty = level === 'Beginner (little to no experience)' 
       ? 'beginner' 
       : level === 'Intermediate (some experience)' 
         ? 'intermediate' 
         : 'advanced';
     
-    // Determine schedule based on days selection
     const daysPerWeek = parseInt(days?.split('-')[0] || '3');
     
-    // Calculate estimated total time
     const sessionTime = time.includes('15-30') 
       ? 25 
       : time.includes('30-45') 
@@ -439,27 +438,22 @@ export default function RoutineBuilder() {
             ? 90 
             : 120;
     
-    // Total weekly time
     const weeklyTime = sessionTime * daysPerWeek;
     
-    // Generate routine tags
     const tags = [
       goal.toLowerCase().replace(' ', '-'),
       difficulty,
       ...preferences.map((p: string) => p.toLowerCase().replace(/[^a-z0-9]/g, '-'))
     ];
     
-    // Create schedule
     const dayNames = ['Monday', 'Wednesday', 'Friday', 'Sunday', 'Tuesday', 'Thursday', 'Saturday'];
     const schedule: DaySchedule[] = [];
     
-    // Focus areas based on preferences and goals
     const focusAreas = [
       'Upper Body', 'Lower Body', 'Core Strength', 'Cardio', 'Full Body', 
       'Flexibility', 'Recovery', 'HIIT', 'Endurance'
     ];
-
-    // Different activity templates based on preferences and equipment
+    
     const activityTemplates: Record<string, Activity[]> = {
       'beginner': [
         {
@@ -541,22 +535,17 @@ export default function RoutineBuilder() {
       ]
     };
     
-    // Generate customized schedule based on user preferences
     for (let i = 0; i < daysPerWeek; i++) {
-      // Distribute rest days appropriately if not training every day
       if (daysPerWeek < 7 && (i === 3 || i === 6)) continue;
       
-      // Select focus area based on day of week and goals
       const dayFocus = goal === 'Weight loss' 
         ? ['Cardio', 'HIIT', 'Full Body'][i % 3]
         : goal === 'Muscle gain'
           ? ['Upper Body', 'Lower Body', 'Core Strength', 'Recovery'][i % 4]
           : focusAreas[i % focusAreas.length];
       
-      // Get activities based on level
       let dayActivities = [...activityTemplates[difficulty]];
       
-      // Customize based on preferences and equipment
       if (preferences.includes('Yoga') || preferences.includes('Pilates')) {
         dayActivities.push({
           name: preferences.includes('Yoga') ? 'Yoga Flow' : 'Pilates Core Work',
@@ -567,7 +556,6 @@ export default function RoutineBuilder() {
         });
       }
       
-      // Add equipment-specific exercises if available
       if (equipment.includes('Basic home equipment') || equipment.includes('Full home gym') || equipment.includes('Commercial gym membership')) {
         dayActivities.push({
           name: 'Resistance Training',
@@ -580,7 +568,6 @@ export default function RoutineBuilder() {
         });
       }
       
-      // Adjust for limitations
       if (limitations.includes('Joint issues') || limitations.includes('Back problems')) {
         dayActivities = dayActivities.filter(a => !a.name.includes('HIIT') && !a.name.includes('Jump'));
         dayActivities.push({
@@ -599,14 +586,12 @@ export default function RoutineBuilder() {
       });
     }
     
-    // Calculate estimated calories burned per week
     const estimatedCalories = schedule.reduce((total, day) => {
       return total + day.activities.reduce((dayTotal, activity) => {
         return dayTotal + (activity.caloriesBurn || 0);
       }, 0);
     }, 0);
     
-    // Generate personalized tips based on goals and preferences
     const tips = [
       `For ${goal.toLowerCase()}, consistency is more important than intensity at first.`,
       `Stay hydrated throughout your workouts - aim for at least 16oz of water per hour of exercise.`,
@@ -614,7 +599,6 @@ export default function RoutineBuilder() {
       `Listen to your body and adjust intensity as needed - some soreness is normal, but pain is not.`,
     ];
     
-    // Add specific tips based on goal
     if (goal === 'Weight loss') {
       tips.push('Combine this routine with a slight caloric deficit for best results.');
       tips.push('Focus on protein intake to preserve muscle mass during weight loss.');
@@ -682,6 +666,75 @@ export default function RoutineBuilder() {
       description: 'You can now paste your routine anywhere.',
     });
   };
+
+  const deleteRoutine = async (routineId: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('routines')
+        .delete()
+        .eq('id', routineId);
+        
+      if (error) throw error;
+      
+      setSavedRoutines(savedRoutines.filter(r => r.id !== routineId));
+      
+      if (routine?.id === routineId) {
+        handleReset();
+      }
+      
+      toast({
+        title: 'Routine deleted successfully!',
+      });
+    } catch (error: any) {
+      console.error('Error deleting routine:', error);
+      toast({
+        title: 'Failed to delete routine',
+        description: error.message || 'Please try again later.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const renderSavedRoutineCard = (savedRoutine: Routine) => (
+    <Card 
+      key={savedRoutine.id} 
+      className="cursor-pointer hover:bg-accent/50 transition-colors"
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex-1" onClick={() => handleSelectSavedRoutine(savedRoutine)}>
+            <h3 className="font-medium">{savedRoutine.routineName}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-1">{savedRoutine.description}</p>
+            <div className="flex mt-2 gap-1 flex-wrap">
+              {savedRoutine.tags?.slice(0, 3).map((tag, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs">{tag}</Badge>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (savedRoutine.id) {
+                  deleteRoutine(savedRoutine.id);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Badge variant="outline" className="capitalize">{savedRoutine.difficulty}</Badge>
+            <p className="text-sm text-muted-foreground">
+              {new Date(savedRoutine.createdAt || '').toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   if (isGenerating) {
     return (
@@ -758,6 +811,7 @@ export default function RoutineBuilder() {
                   onSave={saveRoutine} 
                   onReset={handleReset}
                   onCopy={handleCopyToClipboard}
+                  onDelete={() => routine.id && deleteRoutine(routine.id)}
                   isSaved={routineSaved}
                 />
               )}
@@ -784,29 +838,7 @@ export default function RoutineBuilder() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {savedRoutines.map((savedRoutine) => (
-                        <Card key={savedRoutine.id} className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => handleSelectSavedRoutine(savedRoutine)}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h3 className="font-medium">{savedRoutine.routineName}</h3>
-                                <p className="text-sm text-muted-foreground line-clamp-1">{savedRoutine.description}</p>
-                                <div className="flex mt-2 gap-1 flex-wrap">
-                                  {savedRoutine.tags?.slice(0, 3).map((tag, idx) => (
-                                    <Badge key={idx} variant="secondary" className="text-xs">{tag}</Badge>
-                                  ))}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <Badge variant="outline" className="mb-2 capitalize">{savedRoutine.difficulty}</Badge>
-                                <p className="text-sm text-muted-foreground">
-                                  {new Date(savedRoutine.createdAt || '').toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                      {savedRoutines.map(renderSavedRoutineCard)}
                     </div>
                   )}
                 </CardContent>
